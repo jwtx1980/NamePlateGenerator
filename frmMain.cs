@@ -1181,83 +1181,66 @@ namespace NamePlateGenerator
             if (style == FillStyle.None || targetPath == null) return;
 
             using (GraphicsPath basePath = (GraphicsPath)targetPath.Clone())
-            using (GraphicsPathIterator iterator = new GraphicsPathIterator(basePath))
+            using (Region region = new Region(basePath))
             {
-                GraphicsPath subPath = new GraphicsPath();
-                for (int i = 0; i < iterator.SubpathCount; i++)
+                RectangleF bounds = basePath.GetBounds();
+
+                if (style == FillStyle.Horizontal || style == FillStyle.CrossHatch)
                 {
-                    bool isClosed;
-                    iterator.NextSubpath(subPath, out isClosed);
-                    if (isClosed == false)
+                    for (float y = bounds.Top; y <= bounds.Bottom; y += spacing)
                     {
-                        subPath.Reset();
-                        continue;
-                    }
-                    RectangleF bounds = subPath.GetBounds();
-                    using (Region region = new Region(subPath))
-                    {
-                        if (style == FillStyle.Horizontal || style == FillStyle.CrossHatch)
+                        bool inside = false;
+                        float start = bounds.Left;
+                        for (float x = bounds.Left; x <= bounds.Right; x += 1f)
                         {
-                            for (float y = bounds.Top; y <= bounds.Bottom; y += spacing)
+                            bool isVisible = region.IsVisible(x, y);
+                            if (isVisible && inside == false)
                             {
-                                bool inside = false;
-                                float start = bounds.Left;
-                                for (float x = bounds.Left; x <= bounds.Right; x += 1f)
-                                {
-                                    if (region.IsVisible(x, y))
-                                    {
-                                        if (inside == false)
-                                        {
-                                            inside = true;
-                                            start = x;
-                                        }
-                                    }
-                                    else if (inside == true)
-                                    {
-                                        targetPath.StartFigure();
-                                        targetPath.AddLine(start, y, x, y);
-                                        inside = false;
-                                    }
-                                }
-                                if (inside == true)
-                                {
-                                    targetPath.StartFigure();
-                                    targetPath.AddLine(start, y, bounds.Right, y);
-                                }
+                                inside = true;
+                                start = x;
+                            }
+                            else if (isVisible == false && inside == true)
+                            {
+                                targetPath.StartFigure();
+                                targetPath.AddLine(start, y, x, y);
+                                inside = false;
                             }
                         }
-                        if (style == FillStyle.Vertical || style == FillStyle.CrossHatch)
+                        if (inside == true)
                         {
-                            for (float x = bounds.Left; x <= bounds.Right; x += spacing)
-                            {
-                                bool inside = false;
-                                float start = bounds.Top;
-                                for (float y = bounds.Top; y <= bounds.Bottom; y += 1f)
-                                {
-                                    if (region.IsVisible(x, y))
-                                    {
-                                        if (inside == false)
-                                        {
-                                            inside = true;
-                                            start = y;
-                                        }
-                                    }
-                                    else if (inside == true)
-                                    {
-                                        targetPath.StartFigure();
-                                        targetPath.AddLine(x, start, x, y);
-                                        inside = false;
-                                    }
-                                }
-                                if (inside == true)
-                                {
-                                    targetPath.StartFigure();
-                                    targetPath.AddLine(x, start, x, bounds.Bottom);
-                                }
-                            }
+                            targetPath.StartFigure();
+                            targetPath.AddLine(start, y, bounds.Right, y);
                         }
                     }
-                    subPath.Reset();
+                }
+
+                if (style == FillStyle.Vertical || style == FillStyle.CrossHatch)
+                {
+                    for (float x = bounds.Left; x <= bounds.Right; x += spacing)
+                    {
+                        bool inside = false;
+                        float start = bounds.Top;
+                        for (float y = bounds.Top; y <= bounds.Bottom; y += 1f)
+                        {
+                            bool isVisible = region.IsVisible(x, y);
+                            if (isVisible && inside == false)
+                            {
+                                inside = true;
+                                start = y;
+                            }
+                            else if (isVisible == false && inside == true)
+                            {
+                                targetPath.StartFigure();
+                                targetPath.AddLine(x, start, x, y);
+                                inside = false;
+                            }
+                        }
+                        if (inside == true)
+                        {
+                            targetPath.StartFigure();
+                            targetPath.AddLine(x, start, x, bounds.Bottom);
+                        }
+                    }
                 }
             }
         }
