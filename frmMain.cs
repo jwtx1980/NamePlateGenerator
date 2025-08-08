@@ -35,6 +35,13 @@ namespace NamePlateGenerator
     /// </summary>
     public partial class frmMain : Form
     {
+        private enum FillStyle
+        {
+            None,
+            Horizontal,
+            Vertical,
+            CrossHatch
+        }
         private const float DEFAULT_PANEL_WIDTH_IN = 4.00f;
         private const float DEFAULT_PANEL_HEIGHT_IN = 2.75f;
         private const float DEFAULT_PANEL_MARGIN_IN = 0.20f;
@@ -108,6 +115,9 @@ namespace NamePlateGenerator
         // from curves
         private const float DEFAULT_FLATNESS = .5f;
 
+        private const float DEFAULT_FILL_SPACING = 5f;
+        private const FillStyle DEFAULT_FILL_STYLE = FillStyle.None;
+
         // these variables are set at the start of the generation so we don't have to keep rebuilding them
         private Rectangle plateRectangle = new Rectangle(0, 0, 0, 0);
         private float scaleFactorHeight = 1;
@@ -116,6 +126,9 @@ namespace NamePlateGenerator
         private Font cornerTextFont = null;
         private float workingFlatness = DEFAULT_FLATNESS;
         private List<PlateInfoContainer> autoGenerateList = new List<PlateInfoContainer>();
+
+        private float fillSpacing = DEFAULT_FILL_SPACING;
+        private FillStyle currentFillStyle = DEFAULT_FILL_STYLE;
 
 
         /// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -165,6 +178,9 @@ namespace NamePlateGenerator
                 textBoxFastFeedRate.Text = DEFAULT_FASTFEEDRATE_INPERSEC.ToString();
                 textBoxTextFeedRate.Text = DEFAULT_TEXTFEEDRATE_INPERSEC.ToString();
                 textBoxZFeedRate.Text = DEFAULT_ZFEEDRATE_INPERSEC.ToString();
+
+                textBoxFillSpacing.Text = DEFAULT_FILL_SPACING.ToString();
+                comboBoxFillStyle.SelectedIndex = (int)DEFAULT_FILL_STYLE;
 
                 WantBoundaryRect = DEFAULT_WANT_BOUNDARY_RECT;
                 WantVertTouchdowns = DEFAULT_WANT_VERT_TOUCHDOWNS;
@@ -1156,6 +1172,94 @@ namespace NamePlateGenerator
             // Add the string to the targetPath with a new origin
             targetPath.AddString(stringText, fontToUse.FontFamily, (int)fontToUse.Style, emSize, workingOrigin, format);
 
+            GenerateFillPaths(targetPath, fillSpacing, currentFillStyle);
+
+        }
+
+        private void GenerateFillPaths(GraphicsPath targetPath, float spacing, FillStyle style)
+        {
+            if (style == FillStyle.None || targetPath == null) return;
+
+            using (GraphicsPath basePath = (GraphicsPath)targetPath.Clone())
+            using (GraphicsPathIterator iterator = new GraphicsPathIterator(basePath))
+            {
+                GraphicsPath subPath = new GraphicsPath();
+                for (int i = 0; i < iterator.SubpathCount; i++)
+                {
+                    bool isClosed;
+                    iterator.NextSubpath(subPath, out isClosed);
+                    if (isClosed == false)
+                    {
+                        subPath.Reset();
+                        continue;
+                    }
+                    RectangleF bounds = subPath.GetBounds();
+                    using (Region region = new Region(subPath))
+                    {
+                        if (style == FillStyle.Horizontal || style == FillStyle.CrossHatch)
+                        {
+                            for (float y = bounds.Top; y <= bounds.Bottom; y += spacing)
+                            {
+                                bool inside = false;
+                                float start = bounds.Left;
+                                for (float x = bounds.Left; x <= bounds.Right; x += 1f)
+                                {
+                                    if (region.IsVisible(x, y))
+                                    {
+                                        if (inside == false)
+                                        {
+                                            inside = true;
+                                            start = x;
+                                        }
+                                    }
+                                    else if (inside == true)
+                                    {
+                                        targetPath.StartFigure();
+                                        targetPath.AddLine(start, y, x, y);
+                                        inside = false;
+                                    }
+                                }
+                                if (inside == true)
+                                {
+                                    targetPath.StartFigure();
+                                    targetPath.AddLine(start, y, bounds.Right, y);
+                                }
+                            }
+                        }
+                        if (style == FillStyle.Vertical || style == FillStyle.CrossHatch)
+                        {
+                            for (float x = bounds.Left; x <= bounds.Right; x += spacing)
+                            {
+                                bool inside = false;
+                                float start = bounds.Top;
+                                for (float y = bounds.Top; y <= bounds.Bottom; y += 1f)
+                                {
+                                    if (region.IsVisible(x, y))
+                                    {
+                                        if (inside == false)
+                                        {
+                                            inside = true;
+                                            start = y;
+                                        }
+                                    }
+                                    else if (inside == true)
+                                    {
+                                        targetPath.StartFigure();
+                                        targetPath.AddLine(x, start, x, y);
+                                        inside = false;
+                                    }
+                                }
+                                if (inside == true)
+                                {
+                                    targetPath.StartFigure();
+                                    targetPath.AddLine(x, start, x, bounds.Bottom);
+                                }
+                            }
+                        }
+                    }
+                    subPath.Reset();
+                }
+            }
         }
 
         /// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -1307,6 +1411,12 @@ namespace NamePlateGenerator
             catch { errStr = "Text Feed Rate is not valid"; return 1; }
             try { fastFeedRate = (float)Convert.ToDouble(textBoxFastFeedRate.Text); }
             catch { errStr = "Fast Feed Rate is not valid"; return 1; }
+
+            try { fillSpacing = (float)Convert.ToDouble(textBoxFillSpacing.Text); }
+            catch { errStr = "Fill Spacing is not valid"; return 1; }
+
+            try { currentFillStyle = (FillStyle)Enum.Parse(typeof(FillStyle), comboBoxFillStyle.SelectedItem.ToString()); }
+            catch { errStr = "Fill Style is not valid"; return 1; }
 
             // set the fonts we use
             FontConverter fontConv = new FontConverter();
