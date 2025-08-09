@@ -1219,6 +1219,8 @@ namespace NamePlateGenerator
             if (pathPoints.Length != pathTypes.Length) return 30;
 
             bool atPathEndFlag = false;
+            PointF startPoint = PointF.Empty; // stored start coordinate for current figure
+            bool startPointSet = false;
             // loop through each point
             for (int i = 0; i < pathPoints.Length; i++)
             {
@@ -1236,6 +1238,8 @@ namespace NamePlateGenerator
                 if (workingFlag == POINTISSTART)
                 {
                     // start of new figure. Fast move to XY coord and drop the bit into the work
+                    startPoint = workingPoint;
+                    startPointSet = true;
                     sb.AppendLine("G01 X" + Math.Round(pathPoints[i].X, 6).ToString() + " Y" + Math.Round(pathPoints[i].Y, 6).ToString() + " F" + FastFeedRate.ToString());
                     sb.AppendLine("G01 Z" + zCutDepth.ToString() + " F" + ZFeedrate.ToString());
 
@@ -1252,9 +1256,15 @@ namespace NamePlateGenerator
                 // were we also at the end of a figure?
                 if (atPathEndFlag == true)
                 {
+                    // if the end point does not match the start point, close the path
+                    if (startPointSet && ((workingPoint.X != startPoint.X) || (workingPoint.Y != startPoint.Y)))
+                    {
+                        sb.AppendLine("G01 X" + Math.Round(startPoint.X, 6).ToString() + " Y" + Math.Round(startPoint.Y, 6).ToString() + " F" + TextFeedRate.ToString());
+                    }
                     // pull the tool out of the work
                     sb.AppendLine("G01 Z" + FastMoveZHeight.ToString() + " F" + ZFeedrate.ToString());
                     sb.AppendLine("");
+                    startPointSet = false; // clear for next figure
                 }
             }
 
