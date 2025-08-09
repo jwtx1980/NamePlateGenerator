@@ -101,6 +101,10 @@
             this.label37 = new System.Windows.Forms.Label();
             this.label38 = new System.Windows.Forms.Label();
             this.textBoxZFeedRate = new System.Windows.Forms.TextBox();
+            this.label39 = new System.Windows.Forms.Label();
+            this.textBoxFillSpacing = new System.Windows.Forms.TextBox();
+            this.label40 = new System.Windows.Forms.Label();
+            this.comboBoxFillStyle = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // buttonGenerateFromScreen
@@ -756,9 +760,48 @@
             this.textBoxZFeedRate.Name = "textBoxZFeedRate";
             this.textBoxZFeedRate.Size = new System.Drawing.Size(91, 20);
             this.textBoxZFeedRate.TabIndex = 71;
-            // 
+            //
+            // label39
+            //
+            this.label39.AutoSize = true;
+            this.label39.Location = new System.Drawing.Point(43, 356);
+            this.label39.Name = "label39";
+            this.label39.Size = new System.Drawing.Size(67, 13);
+            this.label39.TabIndex = 74;
+            this.label39.Text = "FillSpacing:";
+            //
+            // textBoxFillSpacing
+            //
+            this.textBoxFillSpacing.Location = new System.Drawing.Point(118, 352);
+            this.textBoxFillSpacing.Name = "textBoxFillSpacing";
+            this.textBoxFillSpacing.Size = new System.Drawing.Size(91, 20);
+            this.textBoxFillSpacing.TabIndex = 75;
+            //
+            // label40
+            //
+            this.label40.AutoSize = true;
+            this.label40.Location = new System.Drawing.Point(55, 382);
+            this.label40.Name = "label40";
+            this.label40.Size = new System.Drawing.Size(55, 13);
+            this.label40.TabIndex = 76;
+            this.label40.Text = "FillStyle:";
+            //
+            // comboBoxFillStyle
+            //
+            this.comboBoxFillStyle.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxFillStyle.FormattingEnabled = true;
+            this.comboBoxFillStyle.Items.AddRange(new object[] {
+            "None",
+            "Horizontal",
+            "Vertical",
+            "CrossHatch"});
+            this.comboBoxFillStyle.Location = new System.Drawing.Point(118, 378);
+            this.comboBoxFillStyle.Name = "comboBoxFillStyle";
+            this.comboBoxFillStyle.Size = new System.Drawing.Size(91, 21);
+            this.comboBoxFillStyle.TabIndex = 77;
+            //
             // frmMain
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
@@ -766,6 +809,10 @@
             this.Controls.Add(this.label37);
             this.Controls.Add(this.label38);
             this.Controls.Add(this.textBoxZFeedRate);
+            this.Controls.Add(this.label40);
+            this.Controls.Add(this.comboBoxFillStyle);
+            this.Controls.Add(this.label39);
+            this.Controls.Add(this.textBoxFillSpacing);
             this.Controls.Add(this.label33);
             this.Controls.Add(this.label34);
             this.Controls.Add(this.label35);
@@ -918,6 +965,10 @@
         private System.Windows.Forms.Label label37;
         private System.Windows.Forms.Label label38;
         private System.Windows.Forms.TextBox textBoxZFeedRate;
+        private System.Windows.Forms.Label label39;
+        private System.Windows.Forms.TextBox textBoxFillSpacing;
+        private System.Windows.Forms.Label label40;
+        private System.Windows.Forms.ComboBox comboBoxFillStyle;
     }
 }
 
